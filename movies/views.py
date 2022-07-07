@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from rest_framework.views import APIView, Request, Response, status
+from movies.models import Movie
 
 from movies.serializers import MovieSerializer
 
@@ -11,3 +12,17 @@ class MovieViews(APIView):
         serialized.save()
 
         return Response(serialized.data, status.HTTP_201_CREATED)
+
+    def get(self, _: Request):
+        movies = Movie.objects.all()
+        serialized = MovieSerializer(movies, many=True)
+
+        return Response(serialized.data, status.HTTP_200_OK)
+
+
+class MovieIdViews(APIView):
+    def get(self, _: Request, movie_id):
+        movie = Movie.objects.get(id=movie_id)
+        serialized = MovieSerializer(movie)
+
+        return Response(serialized.data, status.HTTP_200_OK)
