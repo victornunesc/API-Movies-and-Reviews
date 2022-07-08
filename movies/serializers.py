@@ -36,3 +36,23 @@ class MovieSerializer(serializers.ModelSerializer):
             movie.genres.add(genre)
 
         return movie
+
+    def update(self, instance, validated_data):
+        if "genres" in validated_data:
+            genres = validated_data.pop("genres")
+            genre_list = []
+
+            for item in genres:
+                genre, _ = Genre.objects.get_or_create(name=item["name"])
+                genre_list.append(genre)
+
+            instance.genres.set(genre_list)
+
+        instance = self._update_default(
+            instance=instance, validated_data=validated_data
+        )
+
+        return instance
+
+    def _update_default(self, instance, validated_data):
+        return super().update(instance, validated_data)

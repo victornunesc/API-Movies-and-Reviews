@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView, Request, Response, status
 from movies.models import Movie
 from rest_framework.authentication import TokenAuthentication
@@ -33,3 +33,20 @@ class MovieIdViews(APIView):
         serialized = MovieSerializer(movie)
 
         return Response(serialized.data, status.HTTP_200_OK)
+
+    def patch(self, request: Request, movie_id):
+        movie = get_object_or_404(
+            Movie,
+            pk=movie_id,
+        )
+        serialized = MovieSerializer(instance=movie, data=request.data, partial=True)
+        serialized.is_valid(raise_exception=True)
+        serialized.save()
+
+        return Response(serialized.data, status.HTTP_200_OK)
+
+    def delete(self, _: Request, movie_id):
+        movie = get_object_or_404(Movie, pk=movie_id)
+        movie.delete()
+
+        return Response("", status.HTTP_204_NO_CONTENT)
