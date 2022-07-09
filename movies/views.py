@@ -1,12 +1,13 @@
 from django.shortcuts import get_object_or_404, render
 from rest_framework.views import APIView, Request, Response, status
+from core.pagination import CustomPageNumberPagination
 from movies.models import Movie
 from rest_framework.authentication import TokenAuthentication
 from movies.permissions import MovieIdPermission, MoviePermission
 from movies.serializers import MovieSerializer
 
 # Create your views here.
-class MovieViews(APIView):
+class MovieViews(APIView, CustomPageNumberPagination):
     authentication_classes = [TokenAuthentication]
     permission_classes = [MoviePermission]
 
@@ -17,11 +18,12 @@ class MovieViews(APIView):
 
         return Response(serialized.data, status.HTTP_201_CREATED)
 
-    def get(self, _: Request):
+    def get(self, request: Request):
         movies = Movie.objects.all()
-        serialized = MovieSerializer(movies, many=True)
+        pagination = self.paginate_queryset(queryset=movies, request=request, view=self)
+        serialized = MovieSerializer(pagination, many=True)
 
-        return Response(serialized.data, status.HTTP_200_OK)
+        return self.get_paginated_response(serialized.data)
 
 
 class MovieIdViews(APIView):

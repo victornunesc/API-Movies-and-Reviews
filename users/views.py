@@ -1,21 +1,24 @@
 from rest_framework.views import APIView, Request, Response, status
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from core.pagination import CustomPageNumberPagination
 from users.permissions import UserIdPermission, UserPermission
 from users.serializers import LoginSerializer, UserSerializer
 from rest_framework.authentication import TokenAuthentication
 from users.models import User
 
 
-class UserView(APIView):
+class UserView(APIView, CustomPageNumberPagination):
     authentication_classes = [TokenAuthentication]
     permission_classes = [UserPermission]
 
-    def get(self, _: Request):
+    def get(self, request: Request):
         users = User.objects.all()
-        serialized = UserSerializer(users, many=True)
+        pagination = self.paginate_queryset(queryset=users, request=request, view=self)
 
-        return Response(serialized.data, status.HTTP_200_OK)
+        serialized = UserSerializer(pagination, many=True)
+
+        return self.get_paginated_response(serialized.data)
 
 
 class UserRegisterView(APIView):

@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView, Request, Response, status
+from core.pagination import CustomPageNumberPagination
 from reviews.models import Review
 from reviews.permissions import MoviesIdReviewsPermissions
 
@@ -8,7 +9,7 @@ from reviews.serializers import ReviewSerializer
 from rest_framework.authentication import TokenAuthentication
 
 
-class MoviesIdReviewsViews(APIView):
+class MoviesIdReviewsViews(APIView, CustomPageNumberPagination):
     authentication_classes = [TokenAuthentication]
     permission_classes = [MoviesIdReviewsPermissions]
 
@@ -19,11 +20,14 @@ class MoviesIdReviewsViews(APIView):
 
         return Response(serialized.data, status.HTTP_201_CREATED)
 
-    def get(self, _: Request, movie_id):
+    def get(self, request: Request, movie_id):
         reviews = Review.objects.filter(movie_id=movie_id)
-        serialized = ReviewSerializer(reviews, many=True)
+        pagination = self.paginate_queryset(
+            queryset=reviews, request=request, view=self
+        )
+        serialized = ReviewSerializer(pagination, many=True)
 
-        return Response(serialized.data, status.HTTP_200_OK)
+        return self.get_paginated_response(serialized.data)
 
 
 class ReviewsIdViews(APIView):
@@ -43,9 +47,12 @@ class ReviewsIdViews(APIView):
         return Response("", status.HTTP_204_NO_CONTENT)
 
 
-class ReviewsViews(APIView):
-    def get(self, _: Request):
+class ReviewsViews(APIView, CustomPageNumberPagination):
+    def get(self, request: Request):
         reviews = Review.objects.all()
-        serialized = ReviewSerializer(reviews, many=True)
+        pagination = self.paginate_queryset(
+            queryset=reviews, request=request, view=self
+        )
+        serialized = ReviewSerializer(pagination, many=True)
 
-        return Response(serialized.data, status.HTTP_200_OK)
+        return self.get_paginated_response(serialized.data)
