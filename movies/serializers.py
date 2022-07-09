@@ -1,5 +1,3 @@
-from dataclasses import field
-from email.headerregistry import ParameterizedMIMEHeader
 from rest_framework import serializers
 
 from movies.models import Genre, Movie
